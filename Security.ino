@@ -49,7 +49,18 @@ void Task1code( void * pvParameters )
 
     for(;;)
     {
-        security();
+        if (digitalRead(SECURITY) && !SECURITY_FLAG)
+        {
+            door.doorOpen();
+            SECURITY_FLAG = true;
+            Serial.println("OPEN DOOR");
+        }
+        if (!digitalRead(SECURITY) && SECURITY_FLAG)
+        {
+            door.doorClose();
+            SECURITY_FLAG = false;
+            Serial.println("CLOSE DOOR");
+        }
     }
 }
   
@@ -60,7 +71,7 @@ void loop()
 }
 
 //Функция Bluetooth
-unsigned security()
+/*unsigned security()
 {
     if (digitalRead(SECURITY) && !SECURITY_FLAG)
     {
@@ -75,7 +86,7 @@ unsigned security()
         Serial.println("CLOSE DOOR");
     }
 }
-
+*/
 
 //Переменная принятых данных по ВТ
   int incoming;
