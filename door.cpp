@@ -16,7 +16,19 @@ Door::Door(int lock_open, int lock_close, int time_power_lock)
 //Функция открытия двери
 void Door::doorOpen()
 {
-	digitalWrite(_lock_open, LOW);
+  digitalWrite(_lock_open, LOW);
+  delay(10); 
+  digitalWrite(_lock_open, HIGH);
+  delay(10); 
+  digitalWrite(_lock_open, LOW);
+  delay(10); 
+  digitalWrite(_lock_open, HIGH);
+  delay(10); 
+  digitalWrite(_lock_open, LOW);
+  delay(10); 
+  digitalWrite(_lock_open, HIGH);
+  delay(10); 
+  digitalWrite(_lock_open, LOW);
 	_returnRele();
 }
 
@@ -24,6 +36,18 @@ void Door::doorOpen()
 void Door::doorClose()
 {
 	digitalWrite(_lock_close, LOW);
+  delay(10); 
+  digitalWrite(_lock_close, HIGH);
+  delay(10); 
+  digitalWrite(_lock_close, LOW);
+  delay(10); 
+  digitalWrite(_lock_close, HIGH);
+  delay(10); 
+  digitalWrite(_lock_close, LOW);
+  delay(10); 
+  digitalWrite(_lock_close, HIGH);
+  delay(10); 
+  digitalWrite(_lock_close, LOW);
 	_returnRele();
 }
 
