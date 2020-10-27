@@ -23,12 +23,12 @@ void Door::doorOpen()
   digitalWrite(_lock_open, LOW);
   delay(10); 
   digitalWrite(_lock_open, HIGH);
-  delay(10); 
-  digitalWrite(_lock_open, LOW);
-  delay(10); 
-  digitalWrite(_lock_open, HIGH);
-  delay(10); 
-  digitalWrite(_lock_open, LOW);
+  //delay(5); 
+  //digitalWrite(_lock_open, LOW);
+  //delay(5); 
+  //digitalWrite(_lock_open, HIGH);
+  //delay(5); 
+  //digitalWrite(_lock_open, LOW);
 	_returnRele();
 }
 
@@ -46,8 +46,8 @@ void Door::doorClose()
   digitalWrite(_lock_close, LOW);
   delay(10); 
   digitalWrite(_lock_close, HIGH);
-  delay(10); 
-  digitalWrite(_lock_close, LOW);
+  //delay(50); 
+  //digitalWrite(_lock_close, LOW);
 	_returnRele();
 }
 
@@ -57,4 +57,20 @@ void Door::_returnRele()
 	delay(_time_power_lock); 
 	digitalWrite(_lock_close, HIGH);
 	digitalWrite(_lock_open, HIGH);
+}
+
+//Функция открытия двери
+void Door::doorOpenBT()
+{
+  digitalWrite(_lock_open, LOW);
+  delay(500); 
+  digitalWrite(_lock_open, HIGH);
+}
+
+//Функция закрытия двери
+void Door::doorCloseBT()
+{
+  digitalWrite(_lock_close, LOW);
+  delay(500); 
+  digitalWrite(_lock_close, HIGH);
 }

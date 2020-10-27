@@ -11,6 +11,8 @@ class Door
 		Door(int lock_open, int lock_close, int time_power_lock);
 		void doorOpen();
 		void doorClose();
+    void doorOpenBT();
+    void doorCloseBT();
 	private:
 		void _returnRele();
 		int _lock_open;

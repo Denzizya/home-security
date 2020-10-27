@@ -1,23 +1,25 @@
 #include "BluetoothSerial.h"  // Заголовочный файл для последовательного Bluetooth будет добавлен по умолчанию в Arduino
 BluetoothSerial ESP_BT;       // Объект для Bluetooth
-#include "Call.h"             // Библиотека звонка
-#include "Door.h"             // Библиотека электрозамка
+#include "call.h"             // Библиотека звонка
+#include "door.h"             // Библиотека электрозамка
+#include "alert.h"            // Библиотека работы сирены
 
 //Замок
-  Door door(33, 32, 50); // подключаем библиотеку электро-замка контакты (открыть, закрыть, время работы)
+  Door door(33, 32, 50);    // подключаем библиотеку электро-замка контакты (открыть, закрыть, время работы)
 
 //Звонок
   Call Call(5, 34, 4, 300); // подключаем библиотеку звонка контакты (светодиод, кнопка, оптопара, задержка нажатия)
 
-//Контакты охраны
-  const int SECURITY = 25;
-  unsigned char SECURITY_FLAG = false;
-  const int ALERT = 26;
-  unsigned char ALERT_FLAG = false;
-//  const int ALERT_RELE = 35;
+// Сирена
+  Alert Alert(26, 35);      // оптопара сработки тревоги и реле сирены
+
+// Охрана
+  int SECURITY = 25;             // оптопара поставки/снятия охраны
+  bool STATUS_SECURITY = false;  // флаг сработки тревоги
 
 //Идентифицируем ядро 0.
   TaskHandle_t Task1;
+//Идентифицируем ядро 1.  
   TaskHandle_t Task2;
   
 void setup()
@@ -25,11 +27,9 @@ void setup()
     Serial.begin(115200); // Запускаем последовательный монитор со скоростью 9600
     //Настройка блютуз
     ESP_BT.begin("Control"); // Задаем имя вашего устройства Bluetooth    
-    
-    pinMode(SECURITY, INPUT_PULLUP);  
-    
-//    Serial.println("Bluetooth Device is Ready to Pair");  // По готовности сообщаем, что устройство готово к сопряжению
-    
+
+    pinMode(SECURITY, INPUT_PULLUP);
+
     // Создаем задачу с кодом из функции Task1code(),
     // с приоритетом 1 и выполняемую на ядре 0:
     xTaskCreatePinnedToCore(
@@ -57,57 +57,41 @@ void setup()
     delay(500);
 }
 
-//Запускаем выполнение задачи снятия показания и нагрузка сети на ядре 0.
+//Запускаем выполнение задачи звонка и блютуз на ядре 0.
 void Task1code( void * pvParameters )
 {
-
-    
-    Serial.print("Task1 running on core ");
-    //  "Задача Task2 выполняется на ядре "
-    Serial.println(xPortGetCoreID());
-
-  
     for(;;)
     {
-        Call.callBlik(); // оправшиваем кнопку звонка
-        bluetooth();
+        Call.callBlik();  // оправшиваем кнопку звонка
+        bluetooth();      // опрашиваем блютуз
     }
 }
 
-void Task2code( void * pvParameters ){
-  
-  Serial.print("Task2 running on core ");
-  //  "Задача Task2 выполняется на ядре "
-  Serial.println(xPortGetCoreID());
-  
-  for(;;){
-      security();
-  }
+void Task2code( void * pvParameters )
+{
+    for(;;){
+        if (digitalRead(SECURITY) && !STATUS_SECURITY)
+        {
+            door.doorOpen();
+            STATUS_SECURITY = true;
+            Serial.println("OPEN DOOR");
+        }
+        if (!digitalRead(SECURITY) && STATUS_SECURITY)
+        {
+            door.doorClose();
+            STATUS_SECURITY = false;
+            Serial.println("CLOSE DOOR");
+        }
+        delay(10);
+        
+        Alert.statusAlert();
+        Alert.status_alert;
+    }
 }
 
 void loop()
 {
 }
-
-//Функция Bluetooth
-void security()
-{
-    if (digitalRead(SECURITY) && !SECURITY_FLAG)
-    {
-        door.doorOpen();
-        SECURITY_FLAG = true;
-        Serial.println("OPEN DOOR");
-        
-    }
-    if (!digitalRead(SECURITY) && SECURITY_FLAG)
-    {
-        door.doorClose();
-        SECURITY_FLAG = false;
-        Serial.println("CLOSE DOOR");
-    }
-    delay(100);
-}
-
 
 //Переменная принятых данных по ВТ
   int incoming;
@@ -115,22 +99,19 @@ void security()
 //Функция Bluetooth
 void bluetooth()
 {
-  if (ESP_BT.available()) // Проверяем, не получили ли мы что-либо от Bluetooth модуля
-  {
-    incoming = ESP_BT.read(); // Читаем, что получили
-//    Serial.print("Received:"); 
-//    Serial.println(incoming);
-
-    if (incoming == 49)  // Если значение равно единице, открывем замок
+    if (ESP_BT.available()) // Проверяем, не получили ли мы что-либо от Bluetooth модуля
     {
-      door.doorOpen();
-      ESP_BT.println("Door Open!");
-    }
-  
-    if (incoming == 48)  // Если значение равно нулю, закрываем замок
-    {
-      door.doorClose();
-      ESP_BT.println("Door Close!");
-    }     
-  }  
+        incoming = ESP_BT.read(); // Читаем, что получили
+        if (incoming == 49)  // Если значение равно единице, открывем замок
+        {
+            door.doorOpenBT();
+            ESP_BT.println("Door Open!");
+        }
+        
+        if (incoming == 48)  // Если значение равно нулю, закрываем замок
+        {
+            door.doorCloseBT();
+            ESP_BT.println("Door Close!");
+        }     
+    }  
 }
